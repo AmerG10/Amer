@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Save Customized Membership Plan</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        select, input {
+            padding: 10px;
+            width: 100%;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .form-group-addons {
+            margin-top: 15px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .summary {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .go-back {
+            margin-top: 20px;
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Customize and Save Your Membership Plan</h1>
+
+    <form id="membershipForm">
+        <!-- Select Membership Plan -->
+        <div class="form-group">
+            <label for="planType">Choose Your Plan:</label>
+            <select id="planType" onchange="updatePrice()">
+                <option value="Basic" data-price="29.99">Basic Plan - $29.99/month</option>
+                <option value="Standard" data-price="49.99">Standard Plan - $49.99/month</option>
+                <option value="Premium" data-price="79.99">Premium Plan - $79.99/month</option>
+            </select>
+        </div>
+
+        <!-- Select Membership Duration -->
+        <div class="form-group">
+            <label for="duration">Membership Duration:</label>
+            <select id="duration" onchange="updatePrice()">
+                <option value="1" data-multiplier="1">1 Month</option>
+                <option value="3" data-multiplier="3">3 Months (5% discount)</option>
+                <option value="12" data-multiplier="12">12 Months (10% discount)</option>
+            </select>
+        </div>
+
+        <!-- Additional Features -->
+        <div class="form-group-addons">
+            <label>Extra Add-Ons:</label><br>
+            <input type="checkbox" id="personalTraining" value="Personal Training" data-price="50" onchange="updatePrice()"> Personal Training Sessions ($50/month)<br>
+            <input type="checkbox" id="nutritionPlan" value="Nutrition Plan" data-price="30" onchange="updatePrice()"> Custom Nutrition Plan ($30/month)<br>
+        </div>
+
+        <!-- Display Summary -->
+        <div class="summary" id="summary">
+            <h2>Plan Summary:</h2>
+            <p id="selectedPlan">Plan: Basic</p>
+            <p id="selectedDuration">Duration: 1 Month</p>
+            <p id="selectedAddOns">Add-ons: None</p>
+            <h3>Total Price: $<span id="totalPrice">29.99</span></h3>
+        </div>
+
+        <button type="button" onclick="savePlan()">Save Plan</button>
+        <button type="button" onclick="loadPlan()">Load Saved Plan</button>
+    </form>
+
+    <!-- Go Back Button -->
+    <a href="index.html" class="go-back">Go Back to Home</a>
+</div>
+
+<script>
+    // Function to update the price dynamically
+    function updatePrice() {
+        const planElement = document.getElementById("planType");
+        const durationElement = document.getElementById("duration");
+        const personalTraining = document.getElementById("personalTraining");
+        const nutritionPlan = document.getElementById("nutritionPlan");
+
+        const selectedPlan = planElement.options[planElement.selectedIndex];
+        const planPrice = parseFloat(selectedPlan.getAttribute('data-price'));
+
+        const selectedDuration = durationElement.options[durationElement.selectedIndex];
+        const durationMultiplier = parseFloat(selectedDuration.getAttribute('data-multiplier'));
+
+        let addOnPrice = 0;
+        let addOnSummary = [];
+
+        if (personalTraining.checked) {
+            addOnPrice += parseFloat(personalTraining.getAttribute('data-price'));
+            addOnSummary.push("Personal Training Sessions");
+        }
+        if (nutritionPlan.checked) {
+            addOnPrice += parseFloat(nutritionPlan.getAttribute('data-price'));
+            addOnSummary.push("Custom Nutrition Plan");
+        }
+
+        // Calculate the total price
+        let basePrice = (planPrice + addOnPrice) * durationMultiplier;
+
+        // Apply discounts based on duration
+        if (durationMultiplier === 3) {
+            basePrice *= 0.95;  // 5% discount for 3 months
+        } else if (durationMultiplier === 12) {
+            basePrice *= 0.90;  // 10% discount for 12 months
+        }
+
+        // Update summary on the page
+        document.getElementById("selectedPlan").innerText = "Plan: " + selectedPlan.text;
+        document.getElementById("selectedDuration").innerText = "Duration: " + selectedDuration.text;
+        document.getElementById("selectedAddOns").innerText = "Add-ons: " + (addOnSummary.length > 0 ? addOnSummary.join(", ") : "None");
+        document.getElementById("totalPrice").innerText = basePrice.toFixed(2);
+    }
+
+    // Function to save the plan to localStorage
+    function savePlan() {
+        const planType = document.getElementById("planType").value;
+        const duration = document.getElementById("duration").value;
+        const personalTraining = document.getElementById("personalTraining").checked;
+        const nutritionPlan = document.getElementById("nutritionPlan").checked;
+        const totalPrice = document.getElementById("totalPrice").innerText;
+
+        const savedPlan = {
+            planType,
+            duration,
+            personalTraining,
+            nutritionPlan,
+            totalPrice
+        };
+
+        localStorage.setItem("savedPlan", JSON.stringify(savedPlan));
+        alert("Plan saved successfully!");
+    }
+
+    // Function to load the plan from localStorage
+    function loadPlan() {
+        const savedPlan = JSON.parse(localStorage.getItem("savedPlan"));
+
+        if (savedPlan) {
+            document.getElementById("planType").value = savedPlan.planType;
+            document.getElementById("duration").value = savedPlan.duration;
+            document.getElementById("personalTraining").checked = savedPlan.personalTraining;
+            document.getElementById("nutritionPlan").checked = savedPlan.nutritionPlan;
+            document.getElementById("totalPrice").innerText = savedPlan.totalPrice;
+
+            updatePrice();
+            alert("Saved plan loaded!");
+        } else {
+            alert("No saved plan found!");
+        }
+    }
+
+    // Initialize the price on page load
+    window.onload = function() {
+        updatePrice();
+    };
+</script>
+
+</body>
+</html>
